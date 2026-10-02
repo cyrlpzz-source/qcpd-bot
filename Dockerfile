@@ -4,7 +4,12 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+# Install all dependencies
+RUN npm install --include=optional
+
+# Explicitly install Opus fallback and verify it exists
+RUN npm install opusscript@0.0.8 --save \
+    && node -e "console.log('Opus fallback:', require.resolve('opusscript'))"
 
 COPY . .
 
