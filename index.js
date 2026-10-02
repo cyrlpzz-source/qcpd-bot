@@ -25,35 +25,6 @@ const ffmpegPath = require("ffmpeg-static");
 
 
 /* =========================================================
-   OPUS ENCODER CHECK
-========================================================= */
-
-let opusAvailable = false;
-
-try {
-    require("@discordjs/opus");
-    console.log("@discordjs/opus loaded successfully.");
-    opusAvailable = true;
-} catch (error) {
-    console.log("@discordjs/opus is not available.");
-
-    try {
-        require("opusscript");
-        console.log("opusscript loaded successfully.");
-        opusAvailable = true;
-    } catch (fallbackError) {
-        console.error("No Opus encoder is installed.");
-        console.error("Opus error:", fallbackError.message);
-    }
-}
-
-if (!opusAvailable) {
-    console.error(
-        "Discord audio cannot play because no Opus encoder is available."
-    );
-}
-
-/* =========================================================
    CONFIG
 ========================================================= */
 
@@ -65,20 +36,27 @@ const ytDlpPath =
 const cookiesPath =
     path.join("/tmp", "youtube-cookies.txt");
 
+
 /* =========================================================
    TOKEN CHECK
 ========================================================= */
 
 if (!process.env.TOKEN) {
-    console.error("ERROR: TOKEN is missing.");
+
+    console.error(
+        "ERROR: TOKEN is missing."
+    );
+
     process.exit(1);
 }
+
 
 /* =========================================================
    DISCORD CLIENT
 ========================================================= */
 
 const client = new Client({
+
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
@@ -87,17 +65,20 @@ const client = new Client({
     ]
 });
 
+
 /* =========================================================
    YT-DLP
 ========================================================= */
 
 let ytDlp = null;
 
+
 /* =========================================================
    PER-SERVER MUSIC
 ========================================================= */
 
 const guildMusic = new Map();
+
 
 function getGuildMusic(guildId) {
 
@@ -123,6 +104,7 @@ function getGuildMusic(guildId) {
             isPlaying: false
         };
 
+
         /* =================================================
            PLAYER PLAYING
         ================================================= */
@@ -140,6 +122,7 @@ function getGuildMusic(guildId) {
             }
         );
 
+
         /* =================================================
            PLAYER IDLE
         ================================================= */
@@ -154,17 +137,6 @@ function getGuildMusic(guildId) {
                     "Audio player is idle in guild " +
                     guildId
                 );
-
-                /*
-                 * IMPORTANT:
-                 *
-                 * Do NOT kill currentProcess here.
-                 *
-                 * The previous version killed FFmpeg while
-                 * the stream was being created, which caused:
-                 *
-                 * FFmpeg closed with code null
-                 */
 
                 music.currentProcess = null;
 
@@ -184,6 +156,7 @@ function getGuildMusic(guildId) {
             }
         );
 
+
         /* =================================================
            PLAYER ERROR
         ================================================= */
@@ -201,11 +174,9 @@ function getGuildMusic(guildId) {
 
                 music.isPlaying = false;
 
-                music.currentTrack =
-                    null;
+                music.currentTrack = null;
 
-                music.currentProcess =
-                    null;
+                music.currentProcess = null;
 
                 if (
                     music.queue.length > 0
@@ -233,6 +204,7 @@ function getGuildMusic(guildId) {
             }
         );
 
+
         guildMusic.set(
             guildId,
             music
@@ -243,6 +215,7 @@ function getGuildMusic(guildId) {
         guildId
     );
 }
+
 
 /* =========================================================
    COOKIE FUNCTIONS
@@ -279,6 +252,7 @@ function getYouTubeCookieKeys() {
         );
 }
 
+
 function getYouTubeCookies() {
 
     const cookieKeys =
@@ -306,6 +280,7 @@ function getYouTubeCookies() {
         ""
     );
 }
+
 
 function setupYouTubeCookies() {
 
@@ -370,6 +345,7 @@ function setupYouTubeCookies() {
     }
 }
 
+
 /* =========================================================
    NODE VERSION
 ========================================================= */
@@ -382,54 +358,6 @@ function getNodeMajorVersion() {
     );
 }
 
-/* =========================================================
-   YT-DLP COMMON ARGS
-========================================================= */
-
-function getYtDlpCommonArgs() {
-
-    const args = [
-        "--no-warnings",
-        "--no-progress",
-        "--extractor-args",
-        "youtube:player_client=default,-tv_downgraded,web_embedded"
-    ];
-
-    /*
-     * Node 22 + EJS
-     */
-
-    if (
-        getNodeMajorVersion() >= 22
-    ) {
-
-        args.push(
-            "--js-runtimes",
-            "node"
-        );
-
-        args.push(
-            "--remote-components",
-            "ejs:github"
-        );
-    }
-
-    /*
-     * Cookies
-     */
-
-    if (
-        fs.existsSync(cookiesPath)
-    ) {
-
-        args.push(
-            "--cookies",
-            cookiesPath
-        );
-    }
-
-    return args;
-}
 
 /* =========================================================
    SETUP YT-DLP
@@ -476,6 +404,7 @@ async function setupYtDlp() {
     }
 }
 
+
 /* =========================================================
    URL CHECK
 ========================================================= */
@@ -497,6 +426,7 @@ function isUrl(input) {
         return false;
     }
 }
+
 
 /* =========================================================
    YOUTUBE URL CHECK
@@ -527,6 +457,7 @@ function isYouTubeUrl(input) {
         return false;
     }
 }
+
 
 /* =========================================================
    YOUTUBE PLAYLIST CHECK
@@ -561,6 +492,7 @@ function isYouTubePlaylistUrl(input) {
         return false;
     }
 }
+
 
 /* =========================================================
    SEARCH YOUTUBE
@@ -669,6 +601,7 @@ async function searchYouTube(query) {
     }
 }
 
+
 /* =========================================================
    GET SINGLE VIDEO INFO
 ========================================================= */
@@ -760,6 +693,7 @@ async function getVideoInfo(url) {
     }
 }
 
+
 /* =========================================================
    GET YOUTUBE PLAYLIST
 ========================================================= */
@@ -803,12 +737,6 @@ async function getYouTubePlaylist(url) {
                 cookiesPath
             );
         }
-
-        /*
-         * IMPORTANT:
-         *
-         * Do NOT add --no-playlist here.
-         */
 
         args.push(url);
 
@@ -875,9 +803,14 @@ async function getYouTubePlaylist(url) {
     }
 }
 
+
 /* =========================================================
    AUDIO STREAM
-   YT-DLP -> FFMPEG -> RAW PCM
+   YT-DLP -> FFMPEG -> OGG/OPUS
+
+   IMPORTANT:
+   This does NOT use @discordjs/opus.
+   FFmpeg creates the Opus audio itself.
 ========================================================= */
 
 function getAudioStream(
@@ -936,6 +869,7 @@ function getAudioStream(
                 ========================================= */
 
                 const ytArgs = [
+
                     "-f",
                     "bestaudio/best",
 
@@ -950,6 +884,11 @@ function getAudioStream(
 
                     url
                 ];
+
+
+                /* =========================================
+                   NODE JS RUNTIME
+                ========================================= */
 
                 if (
                     getNodeMajorVersion() >= 22
@@ -967,6 +906,11 @@ function getAudioStream(
                     );
                 }
 
+
+                /* =========================================
+                   YOUTUBE COOKIES
+                ========================================= */
+
                 if (
                     fs.existsSync(cookiesPath)
                 ) {
@@ -980,8 +924,9 @@ function getAudioStream(
                     );
                 }
 
+
                 /* =========================================
-                   YT-DLP PROCESS
+                   START YT-DLP
                 ========================================= */
 
                 ytProcess =
@@ -997,14 +942,20 @@ function getAudioStream(
                         }
                     );
 
+
                 /* =========================================
-                   FFMPEG PROCESS
+                   FFMPEG
+
+                   Convert audio to OGG/OPUS.
+
+                   Discord can play this directly.
                 ========================================= */
 
                 ffmpegProcess =
                     spawn(
                         ffmpegPath,
                         [
+
                             "-hide_banner",
 
                             "-loglevel",
@@ -1015,8 +966,11 @@ function getAudioStream(
 
                             "-vn",
 
-                            "-f",
-                            "s16le",
+                            "-c:a",
+                            "libopus",
+
+                            "-b:a",
+                            "128k",
 
                             "-ar",
                             "48000",
@@ -1024,7 +978,11 @@ function getAudioStream(
                             "-ac",
                             "2",
 
+                            "-f",
+                            "ogg",
+
                             "pipe:1"
+
                         ],
                         {
                             stdio: [
@@ -1035,56 +993,62 @@ function getAudioStream(
                         }
                     );
 
+
                 /* =========================================
-                   SAVE CURRENT PROCESS
+                   PROCESS CONTROLLER
                 ========================================= */
 
                 const controller = {
 
-                    yt: ytProcess,
+                    yt:
+                        ytProcess,
 
                     ffmpeg:
                         ffmpegProcess,
 
-                    kill: function () {
+                    kill:
+                        function () {
 
-                        console.log(
-                            "Killing audio processes in guild " +
-                            guildId
-                        );
+                            console.log(
+                                "Killing audio processes in guild " +
+                                guildId
+                            );
 
-                        try {
+                            try {
 
-                            if (
-                                ytProcess &&
-                                !ytProcess.killed
-                            ) {
+                                if (
+                                    ytProcess &&
+                                    !ytProcess.killed
+                                ) {
 
-                                ytProcess.kill(
-                                    "SIGKILL"
-                                );
-                            }
+                                    ytProcess.kill(
+                                        "SIGKILL"
+                                    );
+                                }
 
-                        } catch (error) {}
+                            } catch (error) {}
 
-                        try {
 
-                            if (
-                                ffmpegProcess &&
-                                !ffmpegProcess.killed
-                            ) {
+                            try {
 
-                                ffmpegProcess.kill(
-                                    "SIGKILL"
-                                );
-                            }
+                                if (
+                                    ffmpegProcess &&
+                                    !ffmpegProcess.killed
+                                ) {
 
-                        } catch (error) {}
-                    }
+                                    ffmpegProcess.kill(
+                                        "SIGKILL"
+                                    );
+                                }
+
+                            } catch (error) {}
+                        }
                 };
+
 
                 music.currentProcess =
                     controller;
+
 
                 /* =========================================
                    YT-DLP STDERR
@@ -1106,11 +1070,13 @@ function getAudioStream(
                         ) {
 
                             console.error(
+                                "yt-dlp:",
                                 text.trim()
                             );
                         }
                     }
                 );
+
 
                 /* =========================================
                    FFMPEG STDERR
@@ -1137,6 +1103,7 @@ function getAudioStream(
                     }
                 );
 
+
                 /* =========================================
                    SAFE PIPE ERRORS
                 ========================================= */
@@ -1160,6 +1127,7 @@ function getAudioStream(
                     }
                 );
 
+
                 ffmpegProcess.stdin.on(
                     "error",
                     function (error) {
@@ -1178,6 +1146,7 @@ function getAudioStream(
                         );
                     }
                 );
+
 
                 ffmpegProcess.stdout.on(
                     "error",
@@ -1198,13 +1167,15 @@ function getAudioStream(
                     }
                 );
 
+
                 /* =========================================
-                   PIPE YT-DLP -> FFMPEG
+                   YT-DLP -> FFMPEG
                 ========================================= */
 
                 ytProcess.stdout.pipe(
                     ffmpegProcess.stdin
                 );
+
 
                 /* =========================================
                    FIRST AUDIO DATA
@@ -1217,6 +1188,7 @@ function getAudioStream(
                         if (
                             resolved
                         ) {
+
                             return;
                         }
 
@@ -1255,8 +1227,9 @@ function getAudioStream(
                     }
                 );
 
+
                 /* =========================================
-                   YT-DLP ERROR
+                   YT-DLP PROCESS ERROR
                 ========================================= */
 
                 ytProcess.on(
@@ -1280,8 +1253,9 @@ function getAudioStream(
                     }
                 );
 
+
                 /* =========================================
-                   FFMPEG ERROR
+                   FFMPEG PROCESS ERROR
                 ========================================= */
 
                 ffmpegProcess.on(
@@ -1305,6 +1279,7 @@ function getAudioStream(
                     }
                 );
 
+
                 /* =========================================
                    YT-DLP CLOSE
                 ========================================= */
@@ -1319,12 +1294,6 @@ function getAudioStream(
                             " in guild " +
                             guildId
                         );
-
-                        /*
-                         * If the process was deliberately killed
-                         * by !stop or !skip, don't report it as
-                         * a playback error.
-                         */
 
                         if (
                             code !== 0 &&
@@ -1348,6 +1317,7 @@ function getAudioStream(
                     }
                 );
 
+
                 /* =========================================
                    FFMPEG CLOSE
                 ========================================= */
@@ -1362,15 +1332,6 @@ function getAudioStream(
                             " in guild " +
                             guildId
                         );
-
-                        /*
-                         * code === null normally means
-                         * the process was killed.
-                         *
-                         * Don't treat that as a natural
-                         * FFmpeg extraction failure if the
-                         * playback was replaced/stopped.
-                         */
 
                         if (
                             code !== 0 &&
@@ -1415,6 +1376,7 @@ function getAudioStream(
 
                 } catch (err) {}
 
+
                 try {
 
                     if (
@@ -1428,11 +1390,13 @@ function getAudioStream(
 
                 } catch (err) {}
 
+
                 reject(error);
             }
         }
     );
 }
+
 
 /* =========================================================
    CONNECT TO VOICE
@@ -1448,12 +1412,14 @@ async function connectToVoice(
         message.member.voice &&
         message.member.voice.channel;
 
+
     if (!voiceChannel) {
 
         throw new Error(
             "You need to join a voice channel first."
         );
     }
+
 
     if (
         music.connection &&
@@ -1463,6 +1429,7 @@ async function connectToVoice(
 
         return;
     }
+
 
     if (
         music.connection
@@ -1477,6 +1444,7 @@ async function connectToVoice(
         music.connection =
             null;
     }
+
 
     const connection =
         joinVoiceChannel({
@@ -1495,18 +1463,22 @@ async function connectToVoice(
                 true
         });
 
+
     await entersState(
         connection,
         VoiceConnectionStatus.Ready,
         30000
     );
 
+
     connection.subscribe(
         music.player
     );
 
+
     music.connection =
         connection;
+
 
     console.log(
         "Connected to voice channel " +
@@ -1515,6 +1487,7 @@ async function connectToVoice(
         message.guild.id
     );
 }
+
 
 /* =========================================================
    PLAY NEXT
@@ -1528,6 +1501,7 @@ async function playNext(
         getGuildMusic(
             guildId
         );
+
 
     if (
         music.queue.length === 0
@@ -1545,16 +1519,21 @@ async function playNext(
         return;
     }
 
+
     const track =
         music.queue.shift();
+
 
     music.currentTrack =
         track;
 
+
     music.playbackId++;
+
 
     const thisPlayback =
         music.playbackId;
+
 
     console.log(
         "Playing playback #" +
@@ -1565,6 +1544,7 @@ async function playNext(
         track.title
     );
 
+
     try {
 
         const audio =
@@ -1574,9 +1554,6 @@ async function playNext(
                 thisPlayback
             );
 
-        /*
-         * A newer playback replaced this one.
-         */
 
         if (
             thisPlayback !==
@@ -1597,21 +1574,35 @@ async function playNext(
             return;
         }
 
+
+        /* =========================================
+           IMPORTANT
+
+           FFmpeg is creating OGG/OPUS.
+
+           Therefore we use OggOpus instead of Raw.
+
+           This avoids requiring @discordjs/opus.
+        ========================================= */
+
         const resource =
             createAudioResource(
                 audio.stream,
                 {
                     inputType:
-                        StreamType.Raw
+                        StreamType.OggOpus
                 }
             );
+
 
         music.currentProcess =
             audio.process;
 
+
         music.player.play(
             resource
         );
+
 
         console.log(
             "Audio player started in guild " +
@@ -1629,6 +1620,7 @@ async function playNext(
             error.message
         );
 
+
         music.currentProcess =
             null;
 
@@ -1638,9 +1630,6 @@ async function playNext(
         music.isPlaying =
             false;
 
-        /*
-         * Try next track.
-         */
 
         if (
             music.queue.length > 0
@@ -1668,6 +1657,7 @@ async function playNext(
     }
 }
 
+
 /* =========================================================
    STOP GUILD AUDIO
 ========================================================= */
@@ -1681,17 +1671,15 @@ function stopGuildAudio(
             guildId
         );
 
+
     console.log(
         "Stopping audio in guild " +
         guildId
     );
 
-    /*
-     * Increment playback ID first so that any
-     * currently starting playback becomes invalid.
-     */
 
     music.playbackId++;
+
 
     if (
         music.currentProcess
@@ -1707,6 +1695,7 @@ function stopGuildAudio(
             null;
     }
 
+
     try {
 
         music.player.stop(
@@ -1715,12 +1704,14 @@ function stopGuildAudio(
 
     } catch (error) {}
 
+
     music.currentTrack =
         null;
 
     music.isPlaying =
         false;
 }
+
 
 /* =========================================================
    DISCORD READY
@@ -1736,9 +1727,11 @@ client.once(
             "!"
         );
 
+
         console.log(
             "YURI BOT is ready."
         );
+
 
         client.user.setActivity(
             "!help",
@@ -1749,6 +1742,7 @@ client.once(
         );
     }
 );
+
 
 /* =========================================================
    MESSAGE HANDLER
@@ -1765,8 +1759,10 @@ client.on(
         if (
             message.author.bot
         ) {
+
             return;
         }
+
 
         /* =============================================
            PREFIX
@@ -1777,8 +1773,10 @@ client.on(
                 PREFIX
             )
         ) {
+
             return;
         }
+
 
         /* =============================================
            SERVER ONLY
@@ -1787,8 +1785,10 @@ client.on(
         if (
             !message.guild
         ) {
+
             return;
         }
+
 
         /* =============================================
            PARSE COMMAND
@@ -1800,15 +1800,20 @@ client.on(
                 .trim()
                 .split(/\s+/);
 
+
         const command =
             args.shift();
 
+
         if (!command) {
+
             return;
         }
 
+
         const lowerCommand =
             command.toLowerCase();
+
 
         /* =============================================
            SERVER MUSIC STATE
@@ -1817,10 +1822,12 @@ client.on(
         const guildId =
             message.guild.id;
 
+
         const music =
             getGuildMusic(
                 guildId
             );
+
 
         /* =================================================
            HELLO
@@ -1837,6 +1844,7 @@ client.on(
             return;
         }
 
+
         /* =================================================
            PING
         ================================================= */
@@ -1846,13 +1854,13 @@ client.on(
         ) {
 
             await message.reply(
-                "" +
                 client.ws.ping +
                 "ms"
             );
 
             return;
         }
+
 
         /* =================================================
            JOIN
@@ -1869,6 +1877,7 @@ client.on(
                     music
                 );
 
+
                 await message.reply(
                     "Joined your voice channel."
                 );
@@ -1880,6 +1889,7 @@ client.on(
                     error.message
                 );
 
+
                 await message.reply(
                     "I couldn't join your voice channel."
                 );
@@ -1887,6 +1897,7 @@ client.on(
 
             return;
         }
+
 
         /* =================================================
            PLAY
@@ -1898,6 +1909,7 @@ client.on(
 
             const query =
                 args.join(" ");
+
 
             if (!query) {
 
@@ -1913,10 +1925,12 @@ client.on(
                 return;
             }
 
+
             const voiceChannel =
                 message.member &&
                 message.member.voice &&
                 message.member.voice.channel;
+
 
             if (!voiceChannel) {
 
@@ -1927,8 +1941,10 @@ client.on(
                 return;
             }
 
+
             let statusMessage =
                 null;
+
 
             try {
 
@@ -1940,6 +1956,7 @@ client.on(
                     message,
                     music
                 );
+
 
                 /* =====================================
                    YOUTUBE PLAYLIST
@@ -1956,10 +1973,12 @@ client.on(
                             "📋 Reading YouTube playlist..."
                         );
 
+
                     const tracks =
                         await getYouTubePlaylist(
                             query
                         );
+
 
                     if (
                         tracks.length === 0
@@ -1972,6 +1991,7 @@ client.on(
                         return;
                     }
 
+
                     for (
                         const track of tracks
                     ) {
@@ -1981,11 +2001,13 @@ client.on(
                         );
                     }
 
+
                     await statusMessage.edit(
                         "✅ Added **" +
                         tracks.length +
                         "** songs to the queue."
                     );
+
 
                     if (
                         !music.isPlaying &&
@@ -1997,8 +2019,10 @@ client.on(
                         );
                     }
 
+
                     return;
                 }
+
 
                 /* =====================================
                    YOUTUBE VIDEO LINK
@@ -2015,10 +2039,12 @@ client.on(
                             "🔎 Getting the YouTube video..."
                         );
 
+
                     const track =
                         await getVideoInfo(
                             query
                         );
+
 
                     if (!track) {
 
@@ -2029,13 +2055,16 @@ client.on(
                         return;
                     }
 
+
                     const alreadyPlaying =
                         music.isPlaying ||
                         music.currentTrack;
 
+
                     music.queue.push(
                         track
                     );
+
 
                     await statusMessage.edit(
                         alreadyPlaying
@@ -2047,6 +2076,7 @@ client.on(
                               "**"
                     );
 
+
                     if (
                         !music.isPlaying &&
                         !music.currentTrack
@@ -2057,8 +2087,10 @@ client.on(
                         );
                     }
 
+
                     return;
                 }
+
 
                 /* =====================================
                    OTHER URL
@@ -2076,6 +2108,7 @@ client.on(
                     return;
                 }
 
+
                 /* =====================================
                    NORMAL SONG SEARCH
                 ===================================== */
@@ -2087,10 +2120,12 @@ client.on(
                         "**..."
                     );
 
+
                 const track =
                     await searchYouTube(
                         query
                     );
+
 
                 if (!track) {
 
@@ -2101,13 +2136,16 @@ client.on(
                     return;
                 }
 
+
                 const alreadyPlaying =
                     music.isPlaying ||
                     music.currentTrack;
 
+
                 music.queue.push(
                     track
                 );
+
 
                 await statusMessage.edit(
                     alreadyPlaying
@@ -2118,6 +2156,7 @@ client.on(
                           track.title +
                           "**"
                 );
+
 
                 if (
                     !music.isPlaying &&
@@ -2135,6 +2174,7 @@ client.on(
                     "Play command error:",
                     error.message
                 );
+
 
                 try {
 
@@ -2167,6 +2207,7 @@ client.on(
             return;
         }
 
+
         /* =================================================
            QUEUE
         ================================================= */
@@ -2187,7 +2228,9 @@ client.on(
                 return;
             }
 
+
             const lines = [];
+
 
             if (
                 music.currentTrack
@@ -2199,6 +2242,7 @@ client.on(
                 );
             }
 
+
             if (
                 music.queue.length > 0
             ) {
@@ -2208,11 +2252,13 @@ client.on(
                     "📋 **Up next:**"
                 );
 
+
                 const displayQueue =
                     music.queue.slice(
                         0,
                         15
                     );
+
 
                 displayQueue.forEach(
                     function (
@@ -2227,6 +2273,7 @@ client.on(
                         );
                     }
                 );
+
 
                 if (
                     music.queue.length > 15
@@ -2244,12 +2291,14 @@ client.on(
                 }
             }
 
+
             await message.reply(
                 lines.join("\n")
             );
 
             return;
         }
+
 
         /* =================================================
            SKIP
@@ -2270,15 +2319,9 @@ client.on(
                 return;
             }
 
-            /*
-             * Invalidate current playback.
-             */
 
             music.playbackId++;
 
-            /*
-             * Kill yt-dlp + FFmpeg.
-             */
 
             if (
                 music.currentProcess
@@ -2294,6 +2337,7 @@ client.on(
                     null;
             }
 
+
             try {
 
                 music.player.stop(
@@ -2302,11 +2346,13 @@ client.on(
 
             } catch (error) {}
 
+
             music.currentTrack =
                 null;
 
             music.isPlaying =
                 false;
+
 
             if (
                 music.queue.length > 0
@@ -2315,6 +2361,7 @@ client.on(
                 await message.reply(
                     "⏭️ Skipped. Playing the next song..."
                 );
+
 
                 await playNext(
                     guildId
@@ -2330,6 +2377,7 @@ client.on(
             return;
         }
 
+
         /* =================================================
            STOP
         ================================================= */
@@ -2341,9 +2389,11 @@ client.on(
             music.queue =
                 [];
 
+
             stopGuildAudio(
                 guildId
             );
+
 
             await message.reply(
                 "⏹️ Stopped the music and cleared the queue."
@@ -2351,6 +2401,7 @@ client.on(
 
             return;
         }
+
 
         /* =================================================
            LEAVE
@@ -2363,9 +2414,11 @@ client.on(
             music.queue =
                 [];
 
+
             stopGuildAudio(
                 guildId
             );
+
 
             if (
                 music.connection
@@ -2381,12 +2434,14 @@ client.on(
                     null;
             }
 
+
             await message.reply(
                 "👋 Left the voice channel."
             );
 
             return;
         }
+
 
         /* =================================================
            HELP
@@ -2419,6 +2474,7 @@ client.on(
     }
 );
 
+
 /* =========================================================
    START BOT
 ========================================================= */
@@ -2427,29 +2483,19 @@ async function startBot() {
 
     try {
 
-        /*
-         * Create cookie file once.
-         */
-
         setupYouTubeCookies();
 
-        /*
-         * Setup yt-dlp.
-         */
-
         await setupYtDlp();
-
-        /*
-         * Login.
-         */
 
         console.log(
             "Logging into Discord..."
         );
 
+
         await client.login(
             process.env.TOKEN
         );
+
 
         console.log(
             "Discord login successful."
@@ -2465,5 +2511,6 @@ async function startBot() {
         process.exit(1);
     }
 }
+
 
 startBot();
