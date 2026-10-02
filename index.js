@@ -27,7 +27,7 @@ const ffmpegPath = require("ffmpeg-static");
    CONFIG
 ========================================================= */
 
-const PREFIX = ";";
+const PREFIX = "!";
 
 const ytDlpPath =
     process.env.YTDLP_PATH || "yt-dlp";
@@ -1707,7 +1707,7 @@ client.once(
         );
 
         console.log(
-            "YURI BOT is ready."
+            "QCPD BOT is ready."
         );
 
         client.user.setActivity(
@@ -2368,7 +2368,7 @@ client.on(
 
             await message.reply(
                 [
-                    "**🎵 YURI BOT COMMANDS**",
+                    "**🎵 QCPD MUSIC COMMANDS**",
                     "",
                     "`!play <song>` — Search YouTube",
                     "`!play <YouTube link>` — Play a video",
