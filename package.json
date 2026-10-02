@@ -1,7 +1,7 @@
 {
-  "name": "yuri-bot",
+  "name": "QCPD-Music",
   "version": "1.0.0",
-  "description": "YURI Discord Music Bot",
+  "description": "QCPD Music Bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
