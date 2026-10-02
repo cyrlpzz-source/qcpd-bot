@@ -23,6 +23,36 @@ const {
 const YTDlpWrap = require("yt-dlp-wrap").default;
 const ffmpegPath = require("ffmpeg-static");
 
+
+/* =========================================================
+   OPUS ENCODER CHECK
+========================================================= */
+
+let opusAvailable = false;
+
+try {
+    require("@discordjs/opus");
+    console.log("@discordjs/opus loaded successfully.");
+    opusAvailable = true;
+} catch (error) {
+    console.log("@discordjs/opus is not available.");
+
+    try {
+        require("opusscript");
+        console.log("opusscript loaded successfully.");
+        opusAvailable = true;
+    } catch (fallbackError) {
+        console.error("No Opus encoder is installed.");
+        console.error("Opus error:", fallbackError.message);
+    }
+}
+
+if (!opusAvailable) {
+    console.error(
+        "Discord audio cannot play because no Opus encoder is available."
+    );
+}
+
 /* =========================================================
    CONFIG
 ========================================================= */
