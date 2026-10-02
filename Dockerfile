@@ -4,12 +4,11 @@ WORKDIR /app
 
 COPY package*.json ./
 
-# Install all dependencies
-RUN npm install --include=optional
+RUN npm install
 
-# Explicitly install Opus fallback and verify it exists
-RUN npm install opusscript@0.0.8 --save \
-    && node -e "console.log('Opus fallback:', require.resolve('opusscript'))"
+RUN npm install @discordjs/opus@0.10.0 opusscript@0.0.8 --save
+
+RUN node -e "console.log('Opus:', require.resolve('@discordjs/opus'))"
 
 COPY . .
 
