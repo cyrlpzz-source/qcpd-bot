@@ -27,7 +27,7 @@ const ffmpegPath = require("ffmpeg-static");
    CONFIG
 ========================================================= */
 
-const PREFIX = "!";
+const PREFIX = ";";
 
 const ytDlpPath =
     process.env.YTDLP_PATH || "yt-dlp";
