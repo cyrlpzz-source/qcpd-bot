@@ -2152,7 +2152,7 @@ client.on(
         ================================================= */
 
         if (
-            lowerCommand === "hello"
+            lowerCommand === "hi"
         ) {
 
             await message.reply(
@@ -3069,7 +3069,7 @@ client.on(
 
                     "`!ping` — Check latency",
 
-                    "`!hello` — Say hello",
+                    "`!hi` — Say hi",
 
                     "`!help` — Show commands"
 
