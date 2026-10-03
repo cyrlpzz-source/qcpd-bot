@@ -2752,7 +2752,7 @@ if (
             await message.reply(
 
                 [
-                    "**🎵 YURI BOT COMMANDS**",
+                    "**🎵 QCPD MUSIC BOT COMMANDS**",
 
                     "",
 
@@ -2764,7 +2764,9 @@ if (
 
                     "`!queue` — Show queue",
 
-                    "`!skip` — Skip current song",
+                    "`!pause` — Pause the music",
+
+                    "`!resume` — Resume the music",
 
                     "`!stop` — Stop and clear queue",
 
