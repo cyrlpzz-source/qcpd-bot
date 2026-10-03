@@ -273,6 +273,140 @@ function getGuildMusic(guildId) {
 
 
 /* =========================================================
+   STICKY NOTES
+========================================================= */
+
+const STICKY_FILE =
+    process.env.STICKY_PATH ||
+    path.join(__dirname, "stickies.json");
+
+let stickies = {};
+
+try {
+
+    if (fs.existsSync(STICKY_FILE)) {
+
+        stickies = JSON.parse(
+            fs.readFileSync(STICKY_FILE, "utf8")
+        );
+    }
+
+} catch (error) {
+
+    console.error(
+        "Failed to load stickies:",
+        error.message
+    );
+
+    stickies = {};
+}
+
+
+function saveStickies() {
+
+    try {
+
+        fs.writeFileSync(
+            STICKY_FILE,
+            JSON.stringify(stickies, null, 2)
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Failed to save stickies:",
+            error.message
+        );
+    }
+}
+
+
+const stickyTimers = new Map();
+
+
+async function repostSticky(channel) {
+
+    const sticky = stickies[channel.id];
+
+    if (!sticky) {
+
+        return;
+    }
+
+    try {
+
+        if (sticky.lastMessageId) {
+
+            const old =
+                await channel.messages
+                    .fetch(sticky.lastMessageId)
+                    .catch(function () {
+                        return null;
+                    });
+
+            if (old) {
+
+                await old.delete().catch(
+                    function () {}
+                );
+            }
+        }
+
+        const sent =
+            await channel.send(
+                "📌 **Sticky note**\n" +
+                sticky.content
+            );
+
+        sticky.lastMessageId = sent.id;
+
+        saveStickies();
+
+    } catch (error) {
+
+        console.error(
+            "Sticky repost error:",
+            error.message
+        );
+    }
+}
+
+
+function scheduleSticky(channel) {
+
+    if (!stickies[channel.id]) {
+
+        return;
+    }
+
+    clearTimeout(
+        stickyTimers.get(channel.id)
+    );
+
+    stickyTimers.set(
+        channel.id,
+        setTimeout(
+            function () {
+
+                stickyTimers.delete(channel.id);
+
+                repostSticky(channel);
+            },
+            2000
+        )
+    );
+}
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
    COOKIE FUNCTIONS
 ========================================================= */
 
@@ -1935,7 +2069,19 @@ client.on(
             return;
         }
 
+        /* =============================================
+           STICKY NOTE REPOST
+        ============================================= */
+        
+        if (
+            message.guild &&
+            stickies[message.channel.id]
+        ) {
+        
+            scheduleSticky(message.channel);
+        }
 
+        
         /* =============================================
            PREFIX
         ============================================= */
@@ -2073,59 +2219,59 @@ client.on(
 
 
         /* =================================================
-   PAUSE
-================================================= */
-
-if (
-    lowerCommand === "pause"
-) {
-
-    if (
-        !music.currentTrack
-    ) {
-
-        await message.reply(
-            "Nothing is currently playing."
-        );
-
-        return;
-    }
-
-
-    if (
-        music.player.state.status ===
-        AudioPlayerStatus.Paused
-    ) {
-
-        await message.reply(
-            "⏸️ Already paused. Use `!resume` to continue."
-        );
-
-        return;
-    }
-
-
-    const paused =
-        music.player.pause();
-
-
-    if (paused) {
-
-        await message.reply(
-            "⏸️ Paused: **" +
-            music.currentTrack.title +
-            "**"
-        );
-
-    } else {
-
-        await message.reply(
-            "I couldn't pause right now."
-        );
-    }
-
-    return;
-}
+               PAUSE
+         ================================================= */
+            
+            if (
+                lowerCommand === "pause"
+            ) {
+            
+                if (
+                    !music.currentTrack
+                ) {
+            
+                    await message.reply(
+                        "Nothing is currently playing."
+                    );
+            
+                    return;
+                }
+            
+            
+                if (
+                    music.player.state.status ===
+                    AudioPlayerStatus.Paused
+                ) {
+            
+                    await message.reply(
+                        "⏸️ Already paused. Use `!resume` to continue."
+                    );
+            
+                    return;
+                }
+            
+            
+                const paused =
+                    music.player.pause();
+            
+            
+                if (paused) {
+            
+                    await message.reply(
+                        "⏸️ Paused: **" +
+                        music.currentTrack.title +
+                        "**"
+                    );
+            
+                } else {
+            
+                    await message.reply(
+                        "I couldn't pause right now."
+                    );
+                }
+            
+                return;
+            }
 
 
 /* =================================================
@@ -2740,6 +2886,149 @@ if (
             return;
         }
 
+        /* =================================================
+           STICKY
+        ================================================= */
+        
+        if (
+            lowerCommand === "sticky"
+        ) {
+        
+            if (
+                !message.member.permissions.has(
+                    PermissionsBitField.Flags.ManageMessages
+                )
+            ) {
+        
+                await message.reply(
+                    "You need the Manage Messages permission to do that."
+                );
+        
+                return;
+            }
+        
+        
+            const content =
+                message.content
+                    .slice(PREFIX.length)
+                    .trim()
+                    .slice(command.length)
+                    .trim();
+        
+        
+            if (!content) {
+        
+                await message.reply(
+                    "**Usage:** `!sticky <your note>`"
+                );
+        
+                return;
+            }
+        
+        
+            if (content.length > 1900) {
+        
+                await message.reply(
+                    "That note is too long. Keep it under 1900 characters."
+                );
+        
+                return;
+            }
+        
+        
+            const old =
+                stickies[message.channel.id];
+        
+            stickies[message.channel.id] = {
+        
+                content: content,
+        
+                lastMessageId:
+                    old
+                        ? old.lastMessageId
+                        : null
+            };
+        
+            clearTimeout(
+                stickyTimers.get(message.channel.id)
+            );
+        
+            await repostSticky(
+                message.channel
+            );
+        
+            return;
+        }
+        
+        
+        /* =================================================
+           UNSTICKY
+        ================================================= */
+        
+        if (
+            lowerCommand === "unsticky"
+        ) {
+        
+            if (
+                !message.member.permissions.has(
+                    PermissionsBitField.Flags.ManageMessages
+                )
+            ) {
+        
+                await message.reply(
+                    "You need the Manage Messages permission to do that."
+                );
+        
+                return;
+            }
+        
+        
+            const sticky =
+                stickies[message.channel.id];
+        
+            if (!sticky) {
+        
+                await message.reply(
+                    "There's no sticky note in this channel."
+                );
+        
+                return;
+            }
+        
+        
+            if (sticky.lastMessageId) {
+        
+                const old =
+                    await message.channel.messages
+                        .fetch(sticky.lastMessageId)
+                        .catch(function () {
+                            return null;
+                        });
+        
+                if (old) {
+        
+                    await old.delete().catch(
+                        function () {}
+                    );
+                }
+            }
+        
+            clearTimeout(
+                stickyTimers.get(message.channel.id)
+            );
+        
+            delete stickies[message.channel.id];
+        
+            saveStickies();
+        
+            await message.reply(
+                "📌 Sticky note removed."
+            );
+        
+            return;
+        }
+
+        
 
         /* =================================================
            HELP
@@ -2763,6 +3052,10 @@ if (
                     "`!play <YouTube playlist>` — Add playlist",
 
                     "`!queue` — Show queue",
+                    
+                    "`!sticky <note>` — Keep a note at the bottom of the channel",
+    
+                    "`!unsticky` — Remove the sticky note",
 
                     "`!pause` — Pause the music",
 
