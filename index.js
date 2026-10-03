@@ -1,3 +1,5 @@
+console.log('BUILD CHECK 1');
+console.log(require('@discordjs/voice').generateDependencyReport());
 require("dotenv").config();
 
 const fs = require("fs");
