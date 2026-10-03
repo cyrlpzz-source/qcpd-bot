@@ -2073,6 +2073,106 @@ client.on(
 
 
         /* =================================================
+   PAUSE
+================================================= */
+
+if (
+    lowerCommand === "pause"
+) {
+
+    if (
+        !music.currentTrack
+    ) {
+
+        await message.reply(
+            "Nothing is currently playing."
+        );
+
+        return;
+    }
+
+
+    if (
+        music.player.state.status ===
+        AudioPlayerStatus.Paused
+    ) {
+
+        await message.reply(
+            "⏸️ Already paused. Use `!resume` to continue."
+        );
+
+        return;
+    }
+
+
+    const paused =
+        music.player.pause();
+
+
+    if (paused) {
+
+        await message.reply(
+            "⏸️ Paused: **" +
+            music.currentTrack.title +
+            "**"
+        );
+
+    } else {
+
+        await message.reply(
+            "I couldn't pause right now."
+        );
+    }
+
+    return;
+}
+
+
+/* =================================================
+   RESUME
+================================================= */
+
+            if (
+                lowerCommand === "resume" ||
+                lowerCommand === "unpause"
+            ) {
+            
+                if (
+                    music.player.state.status !==
+                    AudioPlayerStatus.Paused
+                ) {
+            
+                    await message.reply(
+                        "Nothing is paused."
+                    );
+            
+                    return;
+                }
+            
+            
+                const resumed =
+                    music.player.unpause();
+            
+            
+                if (resumed) {
+            
+                    await message.reply(
+                        "▶️ Resumed: **" +
+                        music.currentTrack.title +
+                        "**"
+                    );
+            
+                } else {
+            
+                    await message.reply(
+                        "I couldn't resume right now."
+                    );
+                }
+            
+                return;
+            }
+
+        /* =================================================
            PLAY
         ================================================= */
 
